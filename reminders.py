@@ -10,37 +10,34 @@ __license__ = "MIT"
 import yaml
 import subprocess
 import datetime
+from pathlib import Path
+import os
 
-def read_reminders(file_path):
+CONFIG_FILE = Path(os.getenv("XDG_CONFIG_HOME"), "reminders/config.yaml")
+
+def load_config() -> dict:
+    with open(CONFIG_FILE, 'r') as config:
+        return yaml.safe_load(config)
+
+def read_reminders(file_path: str) -> list:
     with open(file_path, 'r') as file:
         reminders = yaml.safe_load(file)
     return reminders
 
-"""
-Example of 'reminders.yaml':
+def send_notification(summary: str, body: str) -> None:
+    subprocess.run(['notify-send', summary, body])
 
-```yaml
-reminders:
-  - name: "Water Plants"
-    description: "Lorem Ipsum dolor sit amet"
-    date: 24-01-10 # last time it was done
-    every: 1d # frequency of activity
-```
-"""
-
-def send_notification(title, message):
-    subprocess.run(['notify-send', title, message])
-
-def check_reminders(reminders):
+def check_reminders(reminders: list) -> None:
     today = datetime.date.today()
     for reminder in reminders:
-        reminder_date = datetime.datetime.strptime(reminder['date'], '%d-%m-%y').date()
-        if reminder_date == today:
-            send_notification(reminder['name'], reminder['description'])
-
-# TODO: Send notifications to desktop via the command `notify-send`
+        reminder_date = datetime.datetime.strptime(reminder['date'], '%y-%m-%d').date()
+        if reminder_date <= today:
+            summary = reminder['name']
+            body = f"{reminder.get('description', '')}\n\n(Expired on {reminder_date})"
+            send_notification(summary, body)
 
 if __name__ == "__main__":
-    # TODO: Read file from CLI param.
-    reminders = read_reminders('reminders.yaml')
-    check_reminders(reminders['reminders'])
+    config = load_config()
+    for path in config['paths']:
+        reminders = read_reminders(os.path.expanduser(path))
+        check_reminders(reminders)
