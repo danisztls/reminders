@@ -7,11 +7,12 @@ Trigger notifications for reminders.
 __author__  = "Daniel Souza <me@posix.dev.br>"
 __license__ = "MIT"
 
+import os
 import yaml
 import subprocess
 import datetime
 from pathlib import Path
-import os
+from dateutil.relativedelta import *
 
 CONFIG_FILE = Path(os.getenv("XDG_CONFIG_HOME"), "reminders/config.yaml")
 
@@ -30,13 +31,29 @@ def send_notification(summary: str, body: str) -> None:
 def check_reminders(reminders: list) -> None:
     today = datetime.date.today()
     for reminder in reminders:
-        reminder_date = datetime.datetime.strptime(reminder['date'], '%y-%m-%d').date()
-        if reminder_date <= today:
+        last_date = datetime.datetime.strptime(reminder['date'], '%y-%m-%d').date()
+
+        raw_delta = reminder['freq']
+        delta_unit = raw_delta[-1]
+        delta_value = int(raw_delta[0:-1])
+
+        if delta_unit == "d":
+            delta = relativedelta(days=+delta_value)
+        elif delta_unit == "w":
+            delta = relativedelta(weeks=+delta_value)
+        elif delta_unit == "m":
+            delta = relativedelta(months=+delta_value)
+        elif delta_unit == "y":
+            delta = relativedelta(years=+delta_value)
+
+        next_date= last_date + delta
+
+        if next_date <= today:
             summary = reminder['name']
-            if reminder.get('description'):
-                body = f"{reminder['description']} [{reminder_date}]"
+            if reminder.get('desc'):
+                body = f"{reminder['desc']} [{next_date}]"
             else:
-                body = str(reminder_date)
+                body = str(next_date)
             send_notification(summary, body)
 
 if __name__ == "__main__":
