@@ -33,7 +33,10 @@ def check_reminders(reminders: list) -> None:
         reminder_date = datetime.datetime.strptime(reminder['date'], '%y-%m-%d').date()
         if reminder_date <= today:
             summary = reminder['name']
-            body = f"{reminder.get('description', '')}\n\n(Expired on {reminder_date})"
+            if reminder.get('description'):
+                body = f"{reminder['description']} [{reminder_date}]"
+            else:
+                body = str(reminder_date)
             send_notification(summary, body)
 
 if __name__ == "__main__":
