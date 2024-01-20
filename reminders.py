@@ -38,7 +38,6 @@ def check_reminders(reminders: list) -> None:
             next_date = calc_next_date(last_date, reminder['freq'])
 
         if next_date <= today:
-            print(reminder)
             summary = reminder['name']
             if reminder.get('desc'):
                 body = f"{reminder['desc']} [{next_date}]"
