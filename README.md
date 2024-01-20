@@ -2,13 +2,15 @@
 
 Reminders is a script that reads **reminders** stored in an YAML configuration file and notifies of those that are past date.
 
-It can be run periodically in the background so notifications are sent in due time.
-
-It doesn't write to the configuration file so the user have to manually edit it after the task is done.
-
-Currently it supports one method of notiying which is GNOME [libnotify](https://gitlab.gnome.org/GNOME/libnotify).
-
 I'm writing this because this is an important use case for me and I'm tired of dealing with the usual productivity app and yet another UI. 
+
+## Installation
+
+`pip install reminders`
+
+or
+
+`pip install git+https://github.com/danisztls/reminders`
 
 ## Configuration
 
@@ -35,10 +37,16 @@ It supports multiple reminders file with the following structure:
 
 `freq` support these units: **d** *(day)*, **w** *(week)*, **m** *(month)*, **y** *(year)*.
 
-## Installation
+## Usage
 
-`pip install reminders`
+Just run: 
 
-or
+```bash
+reminders
+```
 
-`pip install git+https://github.com/danisztls/reminders`
+It can be run periodically in the background so notifications are sent in due time.
+
+It doesn't write to the configuration file so the user have to manually edit it after the task is done.
+
+Currently it supports one method of notiying which is GNOME [libnotify](https://gitlab.gnome.org/GNOME/libnotify).
