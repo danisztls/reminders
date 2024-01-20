@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "reminders"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["Daniel Souza <me@posix.dev.br>"]
 homepage = "https://github.com/danisztls/reminders"
