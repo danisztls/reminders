@@ -1,0 +1,10 @@
+[Unit]
+Description=Reminders Notifier
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=reminders.service
+
+[Install]
+WantedBy=default.target

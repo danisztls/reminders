@@ -1,0 +1,7 @@
+[Unit]
+Description=Reminders Notifier
+Wants=default.target
+
+[Service]
+Type=simple
+ExecStart=reminders
