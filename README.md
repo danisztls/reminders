@@ -34,3 +34,11 @@ It supports multiple reminders file with the following structure:
 ```
 
 `freq` support these units: **d** *(day)*, **w** *(week)*, **m** *(month)*, **y** *(year)*.
+
+## Installation
+
+`pip install reminders`
+
+or
+
+`pip install git+https://github.com/danisztls/reminders`
