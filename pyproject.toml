@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "reminders"
+version = "0.1.0"
+description = ""
+authors = ["Daniel Souza <me@posix.dev.br>"]
+homepage = "https://github.com/danisztls/reminders"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyyaml = "^6.0.1"
+python-dateutil = "^2.8.2"
+
+[tool.poetry.scripts]
+reminders = 'reminders:main'
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

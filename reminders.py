@@ -49,6 +49,7 @@ def check_reminders(reminders: list) -> None:
         next_date= last_date + delta
 
         if next_date <= today:
+            print(reminder)
             summary = reminder['name']
             if reminder.get('desc'):
                 body = f"{reminder['desc']} [{next_date}]"
@@ -56,8 +57,11 @@ def check_reminders(reminders: list) -> None:
                 body = str(next_date)
             send_notification(summary, body)
 
-if __name__ == "__main__":
+def main():
     config = load_config()
     for path in config['paths']:
         reminders = read_reminders(os.path.expanduser(path))
         check_reminders(reminders)
+
+if __name__ == "__main__":
+    main()
