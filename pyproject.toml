@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "reminders"
 version = "0.2.0"
-description = ""
+description = "Reminds about events stored in YAML."
 authors = ["Daniel Souza <me@posix.dev.br>"]
 homepage = "https://github.com/danisztls/reminders"
 readme = "README.md"
+license = "GPLv3"
 
 [tool.poetry.dependencies]
 python = "^3.11"
