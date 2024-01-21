@@ -1,16 +1,24 @@
 # Reminders
 
-Reminders is a script that reads **reminders** stored in an YAML configuration file and notifies of those that are past date.
+Reminds about events stored in YAML that are past date.
 
-I'm writing this because this is an important use case for me and I'm tired of dealing with the usual productivity app and yet another UI. 
+I'm writing this because this is an important use case for me _(and for everyone else)_ and I'm tired of dealing with the usual productivity app and yet another UI.
 
 ## Installation
+
+### Via Python
 
 `pip install reminders`
 
 or
 
 `pip install git+https://github.com/danisztls/reminders`
+
+_NOTE: Preferably use pipx instead of pip._
+
+### Arch Linux
+
+Check package on [AUR](https://aur.archlinux.org/packages/reminders-git/).
 
 ## Configuration
 
@@ -30,18 +38,17 @@ It supports multiple reminders file with the following structure:
 
 - name: "Task B"
   desc: "Notify when last date + frequency relative delta is past."
-  last: 2024-01-01 
+  last: 2024-01-01
   freq: 1m
-
 ```
 
-`freq` support these units: **d** *(day)*, **w** *(week)*, **m** *(month)*, **y** *(year)*.
+`freq` support these units: **d** _(day)_, **w** _(week)_, **m** _(month)_, **y** _(year)_.
 
 ## Usage
 
-Just run: 
+Just run:
 
-```bash
+```sh
 reminders
 ```
 
