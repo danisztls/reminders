@@ -5,7 +5,6 @@ Trigger notifications for reminders.
 """
 
 __author__  = "Daniel Souza <me@posix.dev.br>"
-__license__ = "MIT"
 
 import os
 import yaml
