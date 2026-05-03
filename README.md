@@ -56,7 +56,7 @@ Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo
 | `next` | yes* | Date to trigger (`YYYY-MM-DD`) |
 | `last` | yes* | Date last completed (`YYYY-MM-DD`), used with `freq` |
 | `freq` | with `last` | Recurrence interval (e.g. `1d`, `2w`, `3m`, `1y`) |
-| `early_notification` | no | Fire this long before the due date (same format as `freq`) |
+| `early` | no | Fire this long before the due date (same format as `freq`) |
 
 *Either `next` or `last`+`freq` is required.
 
@@ -77,7 +77,7 @@ Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo
 ```yaml
 - name: "Passport renewal"
   next: 2026-07-01
-  early_notification: 3d
+  early: 3d
 ```
 
 **Recurring reminder** — fires when `last + freq` is past today. Update `last` after each completion:
@@ -95,7 +95,7 @@ Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo
   desc: "Run restic to external drive."
   last: 2026-04-01
   freq: 1m
-  early_notification: 2d
+  early: 2d
 ```
 
 ## Usage

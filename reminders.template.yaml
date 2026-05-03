@@ -9,7 +9,7 @@
 - name: "Passport renewal"
   desc: "Book appointment at the consulate."
   next: 2026-07-01
-  early_notification: 3d
+  early: 3d
 
 # Recurring reminder: fires when last + freq is past today.
 # Update `last` to today's date each time you complete it.
@@ -22,7 +22,7 @@
   desc: "Run restic to external drive."
   last: 2026-04-01
   freq: 1m
-  early_notification: 2d
+  early: 2d
 
 # freq units: d (day), w (week), m (month), y (year)
 # Examples: 3d, 2w, 6m, 1y

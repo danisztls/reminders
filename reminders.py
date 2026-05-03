@@ -133,8 +133,8 @@ def check_reminders(reminders: list, state: dict) -> None:
             continue
 
         trigger_date = next_date
-        if reminder.get('early_notification'):
-            trigger_date = _as_datetime(next_date) - parse_freq(reminder['early_notification'])
+        if reminder.get('early'):
+            trigger_date = _as_datetime(next_date) - parse_freq(reminder['early'])
 
         if _as_datetime(trigger_date) <= NOW:
             name = reminder['name']
