@@ -57,14 +57,18 @@ def send_notification(summary: str, body: str) -> None:
 def check_reminders(reminders: list) -> None:
     for reminder in reminders:
         if reminder.get('next'):
-            next_date = reminder['next'] 
+            next_date = reminder['next']
         elif reminder.get('last'):
             last_date = reminder['last']
             next_date = calc_next_date(last_date, reminder['freq'])
         else:
             continue
 
-        if next_date <= TODAY:
+        trigger_date = next_date
+        if reminder.get('early_notification'):
+            trigger_date = next_date - parse_freq(reminder['early_notification'])
+
+        if trigger_date <= TODAY:
             summary = reminder['name']
             if reminder.get('desc'):
                 body = f"{reminder['desc']} [{next_date}]"
@@ -72,21 +76,21 @@ def check_reminders(reminders: list) -> None:
                 body = str(next_date)
             send_notification(summary, body)
 
-def calc_next_date(last_date: datetime, freq: str) -> datetime:
+def parse_freq(freq: str) -> relativedelta:
     freq_unit = freq[-1]
     freq_value = int(freq[0:-1])
 
     if freq_unit == "d":
-        delta = relativedelta(days=+freq_value)
+        return relativedelta(days=+freq_value)
     elif freq_unit == "w":
-        delta = relativedelta(weeks=+freq_value)
+        return relativedelta(weeks=+freq_value)
     elif freq_unit == "m":
-        delta = relativedelta(months=+freq_value)
+        return relativedelta(months=+freq_value)
     elif freq_unit == "y":
-        delta = relativedelta(years=+freq_value)
+        return relativedelta(years=+freq_value)
 
-    next_date = last_date + delta
-    return next_date
+def calc_next_date(last_date: datetime, freq: str) -> datetime:
+    return last_date + parse_freq(freq)
 
 def main():
     if not os.path.isfile(CONFIG_FILE):
