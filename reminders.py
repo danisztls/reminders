@@ -212,6 +212,8 @@ def parse_freq(freq: str) -> relativedelta:
         return relativedelta(months=+freq_value)
     elif freq_unit == "y":
         return relativedelta(years=+freq_value)
+    else:
+        raise ValueError(f"Unknown frequency unit: {freq_unit!r} in {freq!r}")
 
 def calc_next_date(last_date: datetime, freq: str) -> datetime:
     return last_date + parse_freq(freq)
