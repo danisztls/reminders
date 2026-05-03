@@ -188,7 +188,7 @@ def check_reminders(reminders: list, state: dict) -> None:
 
             target_date = str(next_date)
             is_late = entry and entry['target_date'] == target_date
-            late_tag = ' <span foreground="#e06c75">[LATE]</span>' if is_late else ''
+            late_tag = ' [LATE]' if is_late else ''
 
             summary = name
             if reminder.get('desc'):
