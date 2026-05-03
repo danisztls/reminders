@@ -15,7 +15,7 @@ import yaml
 import subprocess
 import datetime
 from pathlib import Path
-from dateutil.relativedelta import *
+from dateutil.relativedelta import relativedelta
 from rich.console import Console
 from rich.table import Table
 from rich import box
