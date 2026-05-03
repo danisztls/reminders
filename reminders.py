@@ -7,6 +7,7 @@ Trigger notifications for reminders.
 __author__  = "Daniel Souza <me@posix.dev.br>"
 
 import os
+import json
 import yaml
 import subprocess
 import datetime
@@ -14,7 +15,10 @@ from pathlib import Path
 from dateutil.relativedelta import *
 
 CONFIG_FILE = Path(os.getenv("XDG_CONFIG_HOME"), "reminders/config.yaml")
+DATA_DIR = Path(os.getenv("XDG_DATA_HOME", Path.home() / ".local/share"), "reminders")
+STATE_FILE = DATA_DIR / "state.json"
 TODAY = datetime.date.today()
+NOW = datetime.datetime.now()
 
 def load_config() -> dict:
     with open(CONFIG_FILE, 'r') as config:
@@ -46,6 +50,45 @@ paths:
     with open(reminders_file, 'w') as f:
         f.write(default_reminders)
 
+def load_state() -> dict:
+    if not STATE_FILE.exists():
+        return {}
+    with open(STATE_FILE, 'r') as f:
+        raw = json.load(f)
+    return {k: datetime.datetime.fromisoformat(v) for k, v in raw.items()}
+
+def save_state(state: dict) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(STATE_FILE, 'w') as f:
+        json.dump({k: v.isoformat() for k, v in state.items()}, f)
+
+def _freq_to_days(freq: str) -> float:
+    unit, value = freq[-1], int(freq[:-1])
+    return {'h': value / 24, 'd': value, 'w': value * 7, 'm': value * 30, 'y': value * 365}[unit]
+
+def calc_cooldown(reminder: dict) -> relativedelta:
+    if reminder.get('freq'):
+        days = _freq_to_days(reminder['freq'])
+        if days < 1:
+            return relativedelta(hours=1)
+        if days < 7:
+            return relativedelta(days=1)
+        if days < 30:
+            return relativedelta(weeks=1)
+        return relativedelta(months=1)
+    next_val = reminder.get('next')
+    if isinstance(next_val, datetime.datetime):
+        return relativedelta(hours=1)
+    if isinstance(next_val, str):
+        if 'T' in next_val:
+            return relativedelta(hours=1)
+        parts = next_val.split('-')
+        if len(parts) == 1:
+            return relativedelta(months=1)
+        if len(parts) == 2:
+            return relativedelta(weeks=1)
+    return relativedelta(days=1)
+
 def read_reminders(file_path: str) -> list:
     with open(file_path, 'r') as file:
         reminders = yaml.safe_load(file)
@@ -54,7 +97,7 @@ def read_reminders(file_path: str) -> list:
 def send_notification(summary: str, body: str) -> None:
     subprocess.run(['notify-send', summary, body])
 
-def check_reminders(reminders: list) -> None:
+def check_reminders(reminders: list, state: dict) -> None:
     for reminder in reminders:
         if reminder.get('next'):
             next_date = reminder['next']
@@ -69,12 +112,18 @@ def check_reminders(reminders: list) -> None:
             trigger_date = next_date - parse_freq(reminder['early_notification'])
 
         if trigger_date <= TODAY:
-            summary = reminder['name']
+            name = reminder['name']
+            last_notified = state.get(name)
+            if last_notified and last_notified + calc_cooldown(reminder) > NOW:
+                continue
+
+            summary = name
             if reminder.get('desc'):
                 body = f"{reminder['desc']} [{next_date}]"
             else:
                 body = str(next_date)
             send_notification(summary, body)
+            state[name] = NOW
 
 def parse_freq(freq: str) -> relativedelta:
     freq_unit = freq[-1]
@@ -97,10 +146,13 @@ def main():
         create_config()
 
     config = load_config()
+    state = load_state()
 
     for path in config['paths']:
         reminders = read_reminders(os.path.expanduser(path))
-        check_reminders(reminders)
+        check_reminders(reminders, state)
+
+    save_state(state)
 
 if __name__ == "__main__":
     main()
