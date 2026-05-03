@@ -1,0 +1,28 @@
+# Reminders template — copy to a path listed in config.yaml
+
+# One-time reminder: fires on a specific date.
+- name: "Dentist appointment"
+  desc: "Call to confirm beforehand."
+  next: 2026-06-15
+
+# One-time reminder with early notification: fires 3 days before the due date.
+- name: "Passport renewal"
+  desc: "Book appointment at the consulate."
+  next: 2026-07-01
+  early_notification: 3d
+
+# Recurring reminder: fires when last + freq is past today.
+# Update `last` to today's date each time you complete it.
+- name: "Water the plants"
+  last: 2026-04-28
+  freq: 1w
+
+# Recurring reminder with description and early notification.
+- name: "Back up hard drive"
+  desc: "Run restic to external drive."
+  last: 2026-04-01
+  freq: 1m
+  early_notification: 2d
+
+# freq units: d (day), w (week), m (month), y (year)
+# Examples: 3d, 2w, 6m, 1y

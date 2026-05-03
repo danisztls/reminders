@@ -1,59 +1,129 @@
 # Reminders
 
-Reminds about events stored in YAML that are past date.
-
-I'm writing this because this is an important use case for me _(and for everyone else)_ and I'm tired of dealing with the usual productivity app and yet another UI.
+A minimal CLI that fires desktop notifications for YAML-defined reminders. No app, no UI — just files and `notify-send`.
 
 ## Installation
 
-### Via Python
+**pip / pipx** (recommended):
 
-`pip install reminders`
+```sh
+pipx install reminders
+# or
+pip install reminders
+```
 
-or
+**From source:**
 
-`pip install git+https://github.com/danisztls/reminders`
+```sh
+pip install git+https://github.com/danisztls/reminders
+```
 
-_NOTE: Preferably use pipx instead of pip._
+**Arch Linux (AUR):**
 
-### Arch Linux
+```sh
+yay -S reminders-git
+```
 
-Check package on [AUR](https://aur.archlinux.org/packages/reminders-git/).
+## Setup
 
-## Configuration
+On first run, `reminders` auto-creates `$XDG_CONFIG_HOME/reminders/config.yaml` with a default reminders file:
 
-It expects a configuration file at `$XDG_CONFIG_HOME/reminders/config.yaml` such as:
+```yaml
+# $XDG_CONFIG_HOME/reminders/config.yaml
+paths:
+  - "~/.config/reminders/reminders.yaml"
+```
+
+Add more paths to load reminders from multiple files:
 
 ```yaml
 paths:
-  - "~/reminders.yml"
+  - "~/.config/reminders/personal.yaml"
+  - "~/.config/reminders/work.yaml"
+  - "~/notes/reminders.yaml"
 ```
 
-It supports multiple reminders file with the following structure:
+## Reminder format
+
+Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo as a starting point.
+
+### Fields
+
+| Field | Required | Description |
+|---|---|---|
+| `name` | yes | Notification title |
+| `desc` | no | Notification body text |
+| `next` | yes* | Date to trigger (`YYYY-MM-DD`) |
+| `last` | yes* | Date last completed (`YYYY-MM-DD`), used with `freq` |
+| `freq` | with `last` | Recurrence interval (e.g. `1d`, `2w`, `3m`, `1y`) |
+| `early_notification` | no | Fire this long before the due date (same format as `freq`) |
+
+*Either `next` or `last`+`freq` is required.
+
+**Frequency units:** `d` (day), `w` (week), `m` (month), `y` (year).
+
+### Examples
+
+**One-time reminder** — fires on a specific date:
 
 ```yaml
-- name: ""
-  desc: "Notify when next date is past."
-  next: 2024-01-30
-
-- name: "Task B"
-  desc: "Notify when last date + frequency relative delta is past."
-  last: 2024-01-01
-  freq: 1m
+- name: "Dentist appointment"
+  desc: "Call to confirm beforehand."
+  next: 2026-06-15
 ```
 
-`freq` support these units: **d** _(day)_, **w** _(week)_, **m** _(month)_, **y** _(year)_.
+**One-time with early notification** — fires 3 days before the date:
+
+```yaml
+- name: "Passport renewal"
+  next: 2026-07-01
+  early_notification: 3d
+```
+
+**Recurring reminder** — fires when `last + freq` is past today. Update `last` after each completion:
+
+```yaml
+- name: "Water the plants"
+  last: 2026-04-28
+  freq: 1w
+```
+
+**Recurring with description and early notification:**
+
+```yaml
+- name: "Back up hard drive"
+  desc: "Run restic to external drive."
+  last: 2026-04-01
+  freq: 1m
+  early_notification: 2d
+```
 
 ## Usage
-
-Just run:
 
 ```sh
 reminders
 ```
 
-It can be run periodically in the background so notifications are sent in due time.
+Reminders does not modify your files — after completing a task, update `last` or remove the entry manually.
 
-It doesn't write to the configuration file so the user have to manually edit it after the task is done.
+## Automation
 
-Currently it supports one method of notiying which is GNOME [libnotify](https://gitlab.gnome.org/GNOME/libnotify).
+Install the included systemd user units to run reminders hourly in the background:
+
+```sh
+cp reminders.service reminders.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now reminders.timer
+```
+
+Check status:
+
+```sh
+systemctl --user status reminders.timer
+journalctl --user -u reminders.service
+```
+
+## Requirements
+
+- `notify-send` (provided by `libnotify` on most distros)
+- Python 3.11+
