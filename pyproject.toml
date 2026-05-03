@@ -1,6 +1,6 @@
 [project]
 name = "reminders"
-version = "0.2.0"
+version = "0.3.0"
 description = "Reminds about events stored in YAML."
 authors = [{ name = "Daniel Souza", email = "me@posix.dev.br" }]
 readme = "README.md"
