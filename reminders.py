@@ -109,6 +109,11 @@ def calc_cooldown(reminder: dict) -> relativedelta:
             return relativedelta(weeks=1)
     return relativedelta(days=1)
 
+def _as_datetime(d) -> datetime.datetime:
+    if isinstance(d, datetime.datetime):
+        return d
+    return datetime.datetime(d.year, d.month, d.day)
+
 def read_reminders(file_path: str) -> list:
     with open(file_path, 'r') as file:
         reminders = yaml.safe_load(file)
@@ -129,9 +134,9 @@ def check_reminders(reminders: list, state: dict) -> None:
 
         trigger_date = next_date
         if reminder.get('early_notification'):
-            trigger_date = next_date - parse_freq(reminder['early_notification'])
+            trigger_date = _as_datetime(next_date) - parse_freq(reminder['early_notification'])
 
-        if trigger_date <= TODAY:
+        if _as_datetime(trigger_date) <= NOW:
             name = reminder['name']
             reminder_id = slugify(name)
             entry = state.get(reminder_id)
@@ -155,7 +160,9 @@ def parse_freq(freq: str) -> relativedelta:
     freq_unit = freq[-1]
     freq_value = int(freq[0:-1])
 
-    if freq_unit == "d":
+    if freq_unit == "h":
+        return relativedelta(hours=+freq_value)
+    elif freq_unit == "d":
         return relativedelta(days=+freq_value)
     elif freq_unit == "w":
         return relativedelta(weeks=+freq_value)
