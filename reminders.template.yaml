@@ -24,5 +24,15 @@
   freq: 1m
   early: 2d
 
+# Yearly reminder: fires once a year on a fixed MM-DD date.
+# Notifies up to 7 days after the date if missed. Supports `early`.
+- name: "Mom's birthday"
+  yearly: "06-15"
+
+# Monthly reminder: fires once a month on a fixed DD day.
+# Notifies up to 7 days after the date if missed. Supports `early`.
+- name: "Pay rent"
+  monthly: "01"
+
 # freq units: d (day), w (week), m (month), y (year)
 # Examples: 3d, 2w, 6m, 1y

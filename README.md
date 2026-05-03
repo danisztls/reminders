@@ -56,9 +56,11 @@ Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo
 | `next` | yes* | Date to trigger (`YYYY-MM-DD`) |
 | `last` | yes* | Date last completed (`YYYY-MM-DD`), used with `freq` |
 | `freq` | with `last` | Recurrence interval (e.g. `1d`, `2w`, `3m`, `1y`) |
+| `yearly` | yes* | Annual recurrence on a fixed date (`MM-DD`) |
+| `monthly` | yes* | Monthly recurrence on a fixed day (`DD`) |
 | `early` | no | Fire this long before the due date (same format as `freq`) |
 
-*Either `next` or `last`+`freq` is required.
+*One of `next`, `last`+`freq`, `yearly`, or `monthly` is required.
 
 **Frequency units:** `d` (day), `w` (week), `m` (month), `y` (year).
 
@@ -96,6 +98,37 @@ Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo
   last: 2026-04-01
   freq: 1m
   early: 2d
+```
+
+**Yearly reminder** — fires once a year on a fixed date; notifies up to 7 days after if missed:
+
+```yaml
+- name: "Mom's birthday"
+  yearly: "06-15"
+```
+
+**Yearly with early notification** — fires ahead of the date:
+
+```yaml
+- name: "Tax return"
+  desc: "Gather documents and file."
+  yearly: "04-15"
+  early: 14d
+```
+
+**Monthly reminder** — fires once a month on a fixed day; notifies up to 7 days after if missed:
+
+```yaml
+- name: "Pay rent"
+  monthly: "01"
+```
+
+**Monthly with early notification:**
+
+```yaml
+- name: "Pay rent"
+  monthly: "01"
+  early: 3d
 ```
 
 ## Usage

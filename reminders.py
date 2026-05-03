@@ -126,7 +126,38 @@ def read_reminders(file_path: str) -> list:
 def send_notification(summary: str, body: str) -> None:
     subprocess.run(['notify-send', summary, body])
 
+def _month_date(year: int, month: int, day: int) -> datetime.date:
+    while True:
+        try:
+            return datetime.date(year, month, day)
+        except ValueError:
+            month += 1
+            if month > 12:
+                month, year = 1, year + 1
+
 def get_trigger_date(reminder: dict):
+    if reminder.get('monthly'):
+        day = int(reminder['monthly'])
+        target_date = _month_date(TODAY.year, TODAY.month, day)
+        if TODAY > target_date + datetime.timedelta(days=7):
+            next_m = target_date.month % 12 + 1
+            next_y = target_date.year + (1 if target_date.month == 12 else 0)
+            target_date = _month_date(next_y, next_m, day)
+        trigger_date = target_date
+        if reminder.get('early'):
+            trigger_date = target_date - parse_freq(reminder['early'])
+        return trigger_date, target_date
+
+    if reminder.get('yearly'):
+        month, day = map(int, reminder['yearly'].split('-'))
+        target_date = datetime.date(TODAY.year, month, day)
+        if TODAY > target_date + datetime.timedelta(days=7):
+            target_date = datetime.date(TODAY.year + 1, month, day)
+        trigger_date = target_date
+        if reminder.get('early'):
+            trigger_date = target_date - parse_freq(reminder['early'])
+        return trigger_date, target_date
+
     if reminder.get('next'):
         next_date = reminder['next']
     elif reminder.get('last'):
@@ -149,7 +180,10 @@ def check_reminders(reminders: list, state: dict) -> None:
             reminder_id = slugify(name)
             entry = state.get(reminder_id)
             last_notified = entry['last_notified'] if entry else None
-            if last_notified and last_notified + calc_cooldown(reminder) > NOW:
+            if reminder.get('yearly') or reminder.get('monthly'):
+                if entry and entry['target_date'] == str(next_date):
+                    continue
+            elif last_notified and last_notified + calc_cooldown(reminder) > NOW:
                 continue
 
             target_date = str(next_date)
