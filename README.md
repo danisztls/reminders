@@ -137,6 +137,20 @@ Each reminder file is a YAML list. Copy `reminders.template.yaml` from this repo
 reminders
 ```
 
+Fires desktop notifications for any overdue reminders.
+
+```sh
+reminders --summary
+```
+
+Pretty-prints all reminders grouped by status:
+
+- **Late** (red) — trigger date is past
+- **Soon** (yellow) — due within the next 7 days
+- **Future** (white) — everything else
+
+Each group shows the due date, name, and description (if set), sorted by date.
+
 Reminders does not modify your files — after completing a task, update `last` or remove the entry manually.
 
 ## Automation
