@@ -7,7 +7,9 @@ Trigger notifications for reminders.
 __author__  = "Daniel Souza <me@posix.dev.br>"
 
 import os
+import re
 import json
+import unicodedata
 import yaml
 import subprocess
 import datetime
@@ -50,17 +52,35 @@ paths:
     with open(reminders_file, 'w') as f:
         f.write(default_reminders)
 
+def slugify(name: str) -> str:
+    slug = unicodedata.normalize('NFD', name.lower()).encode('ascii', 'ignore').decode('ascii')
+    slug = re.sub(r'[^\w\s-]', '', slug)
+    slug = re.sub(r'[\s_]+', '-', slug)
+    slug = re.sub(r'-+', '-', slug)
+    return slug.strip('-')
+
 def load_state() -> dict:
     if not STATE_FILE.exists():
         return {}
     with open(STATE_FILE, 'r') as f:
         raw = json.load(f)
-    return {k: datetime.datetime.fromisoformat(v) for k, v in raw.items()}
+    state = {}
+    for k, v in raw.items():
+        if isinstance(v, dict):
+            state[k] = {
+                'last_notified': datetime.datetime.fromisoformat(v['last_notified']),
+                'target_date': v['target_date'],
+            }
+    return state
 
 def save_state(state: dict) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(STATE_FILE, 'w') as f:
-        json.dump({k: v.isoformat() for k, v in state.items()}, f)
+        json.dump(
+            {k: {'last_notified': v['last_notified'].isoformat(), 'target_date': v['target_date']}
+             for k, v in state.items()},
+            f,
+        )
 
 def _freq_to_days(freq: str) -> float:
     unit, value = freq[-1], int(freq[:-1])
@@ -113,17 +133,23 @@ def check_reminders(reminders: list, state: dict) -> None:
 
         if trigger_date <= TODAY:
             name = reminder['name']
-            last_notified = state.get(name)
+            reminder_id = slugify(name)
+            entry = state.get(reminder_id)
+            last_notified = entry['last_notified'] if entry else None
             if last_notified and last_notified + calc_cooldown(reminder) > NOW:
                 continue
 
+            target_date = str(next_date)
+            is_late = entry and entry['target_date'] == target_date
+            late_tag = ' <span foreground="#e06c75">[LATE]</span>' if is_late else ''
+
             summary = name
             if reminder.get('desc'):
-                body = f"{reminder['desc']} [{next_date}]"
+                body = f"{reminder['desc']} [{next_date}]{late_tag}"
             else:
-                body = str(next_date)
+                body = f"{next_date}{late_tag}"
             send_notification(summary, body)
-            state[name] = NOW
+            state[reminder_id] = {'last_notified': NOW, 'target_date': target_date}
 
 def parse_freq(freq: str) -> relativedelta:
     freq_unit = freq[-1]
