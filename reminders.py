@@ -9,12 +9,16 @@ __author__  = "Daniel Souza <me@posix.dev.br>"
 import os
 import re
 import json
+import argparse
 import unicodedata
 import yaml
 import subprocess
 import datetime
 from pathlib import Path
 from dateutil.relativedelta import *
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
 CONFIG_FILE = Path(os.getenv("XDG_CONFIG_HOME"), "reminders/config.yaml")
 DATA_DIR = Path(os.getenv("XDG_DATA_HOME", Path.home() / ".local/share"), "reminders")
@@ -122,19 +126,23 @@ def read_reminders(file_path: str) -> list:
 def send_notification(summary: str, body: str) -> None:
     subprocess.run(['notify-send', summary, body])
 
+def get_trigger_date(reminder: dict):
+    if reminder.get('next'):
+        next_date = reminder['next']
+    elif reminder.get('last'):
+        next_date = calc_next_date(reminder['last'], reminder['freq'])
+    else:
+        return None, None
+    trigger_date = next_date
+    if reminder.get('early'):
+        trigger_date = _as_datetime(next_date) - parse_freq(reminder['early'])
+    return trigger_date, next_date
+
 def check_reminders(reminders: list, state: dict) -> None:
     for reminder in reminders:
-        if reminder.get('next'):
-            next_date = reminder['next']
-        elif reminder.get('last'):
-            last_date = reminder['last']
-            next_date = calc_next_date(last_date, reminder['freq'])
-        else:
+        trigger_date, next_date = get_trigger_date(reminder)
+        if trigger_date is None:
             continue
-
-        trigger_date = next_date
-        if reminder.get('early'):
-            trigger_date = _as_datetime(next_date) - parse_freq(reminder['early'])
 
         if _as_datetime(trigger_date) <= NOW:
             name = reminder['name']
@@ -174,11 +182,75 @@ def parse_freq(freq: str) -> relativedelta:
 def calc_next_date(last_date: datetime, freq: str) -> datetime:
     return last_date + parse_freq(freq)
 
+def print_summary(config: dict) -> None:
+    console = Console()
+    SOON_HORIZON = datetime.timedelta(days=7)
+
+    late, soon, future = [], [], []
+
+    for path in config['paths']:
+        reminders = read_reminders(os.path.expanduser(path))
+        for reminder in reminders:
+            trigger_date, next_date = get_trigger_date(reminder)
+            if trigger_date is None:
+                continue
+            entry = {
+                'name': reminder['name'],
+                'desc': reminder.get('desc', ''),
+                'trigger_date': _as_datetime(trigger_date),
+                'next_date': next_date,
+            }
+            if entry['trigger_date'] <= NOW:
+                late.append(entry)
+            elif entry['trigger_date'] <= NOW + SOON_HORIZON:
+                soon.append(entry)
+            else:
+                future.append(entry)
+
+    for group in (late, soon, future):
+        group.sort(key=lambda e: e['trigger_date'])
+
+    def make_table(entries: list, color: str, label: str) -> None:
+        if not entries:
+            return
+        has_desc = any(e['desc'] for e in entries)
+        table = Table(
+            box=box.SIMPLE,
+            show_header=False,
+            pad_edge=False,
+            title=f"[bold {color}]{label} ({len(entries)})[/]",
+            title_justify="left",
+        )
+        table.add_column("date", style=color, no_wrap=True)
+        table.add_column("name", style="bold")
+        if has_desc:
+            table.add_column("desc", style="dim")
+        for e in entries:
+            date_str = str(e['next_date'])
+            row = [date_str, e['name']]
+            if has_desc:
+                row.append(e['desc'])
+            table.add_row(*row)
+        console.print(table)
+
+    make_table(late, "red", "Late")
+    make_table(soon, "yellow", "Soon")
+    make_table(future, "white", "Future")
+
 def main():
+    parser = argparse.ArgumentParser(description="Trigger notifications for reminders.")
+    parser.add_argument('--summary', action='store_true', help="Pretty-print a summary of all reminders.")
+    args = parser.parse_args()
+
     if not os.path.isfile(CONFIG_FILE):
         create_config()
 
     config = load_config()
+
+    if args.summary:
+        print_summary(config)
+        return
+
     state = load_state()
 
     for path in config['paths']:
