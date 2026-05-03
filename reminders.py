@@ -20,7 +20,7 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 
-CONFIG_FILE = Path(os.getenv("XDG_CONFIG_HOME"), "reminders/config.yaml")
+CONFIG_FILE = Path(os.getenv("XDG_CONFIG_HOME", Path.home() / ".config"), "reminders/config.yaml")
 DATA_DIR = Path(os.getenv("XDG_DATA_HOME", Path.home() / ".local/share"), "reminders")
 STATE_FILE = DATA_DIR / "state.json"
 TODAY = datetime.date.today()
